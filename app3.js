@@ -1,89 +1,50 @@
 const puppeteer = require('puppeteer-core');
 
 //https://blog.lovemily.me/a-deep-dive-guide-for-crawling-spa-with-puppeteer-and-troubleshooting/#crawl-a-spa-page
-//https://github.com/GoogleChrome/puppeteer/blob/v1.13.0/docs/api.md
+
 
 (async () => {
 	
 
   const browser = await puppeteer.launch({
     executablePath: './chromium/chrome.exe',
-	headless: false,
-	devtools: true,
-	args: [
-		//"-–disable-gpu",
-		// "–disable-dev-shm-usage",
-		// "–disable-setuid-sandbox",
-		// "–no-first-run",
-		// "–no-sandbox",
-		// "–no-zygote",
-		// "–single-process"
-	]
+    headless: false,
 	// args: [
     //  '--proxy-server=127.0.0.1:1080'
     // ]
   });
+  function logRequest(interceptedRequest) {
+  		console.log('A request was made:', interceptedRequest.url());
+  }
+  function getData(url) {
+	  return new Promise(async (resolve, reject) => {
+	    const page = await browser.newPage();
+	    page.on('response',(res) => {
+		 console.log("res",res.ok(),res.url());	      
+	      // if(res) {
+	      // 	return resolve("ok");
+	      // }
+	      // if(err) {
+	      // 	return reject(err);
+	      // }
+	    });
+		page.on('request', logRequest);
 
-  const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(30000);
-  await page.setCacheEnabled(false);
-  console.log('111111',new Date());
-  const timeout = 30000;
-  await page.goto('http://audiobookbay.nl/page/9000/',{
-  	waitUntil:"domcontentloaded"
-  });
-  console.log("ffffff",new Date());
-  var items=await page.evaluate(()=>(
-       Array.from(document.querySelectorAll('#content > div > div > h2 > a'))
-      	.map(item=>item.href)
-  ));
+		page.once('load', () => console.log('Page loaded!'));
 
-  // var items=await page.$$eval('#content > div > div > h2 > a',function(links){
-	 //  return links.map(item=>item.href);
-  // });
+		page.on('console', msg => {
+		  for (let i = 0; i < msg.args().length; ++i)
+		    console.log(`${i}: ${msg.args()[i]}`);
+		});
+	    page.goto(url);
+	});
+  };
   
-  console.log(items);
-  //await page.close();
-  //await browser.close();
-
-})();
-
-
-
-
-
-//   function logRequest(interceptedRequest) {
-//   		console.log('A request was made:', interceptedRequest.url());
-//   }
-//   function getData(url) {
-// 	  return new Promise(async (resolve, reject) => {
-// 	    const page = await browser.newPage();
-// 	    page.on('response',(res) => {
-// 		 console.log("res",res.ok(),res.url());	      
-// 	      // if(res) {
-// 	      // 	return resolve("ok");
-// 	      // }
-// 	      // if(err) {
-// 	      // 	return reject(err);
-// 	      // }
-// 	    });
-// 		page.on('request', logRequest);
-
-// 		page.once('load', () => console.log('Page loaded!'));
-
-// 		page.on('console', msg => {
-// 		  for (let i = 0; i < msg.args().length; ++i)
-// 		    console.log(`${i}: ${msg.args()[i]}`);
-// 		});
-// 	    page.goto(url);
-// 	});
-//   };
-  
-//  getData("http://www.baidu.com").then(function(res){
-// 	 console.log("getData.then",res);
-//  }).catch(e=>console.log(e));
+ getData("http://www.baidu.com").then(function(res){
+	 console.log("getData.then",res);
+ }).catch(e=>console.log(e));
  
-// })();
+})();
 
   // const page = await browser.newPage();
   // await page.goto('https://rutracker.org/forum/index.php');

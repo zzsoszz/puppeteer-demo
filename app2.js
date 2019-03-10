@@ -84,23 +84,28 @@ const puppeteer = require('puppeteer-core');
 	      	.map(item=>item.href)
 	  ));
 	  console.log("magnetIcon",items);
-	  return items;
-	  // var maglink=await page.$$eval("#magnetIcon",(link)=>{
-	  // 		console.log("link",link);
-	  //     	return link.href
+
+	  // var maglink=await page.$eval("#magnetIcon",function(item){
+	  // 		console.log(item.attr("href"));
 	  // });
+	  
+	  const searchValue = await page.$eval('#magnetIcon', el => el);
+	  console.log("searchValue",searchValue);
+	  //console.log("maglink",maglink);
 	  // return maglink;
 	  //console.log("ffffff",new Date());
 	  //return items;
+
+	  return items;
   }
-  
-  
+
+
   var sucess=await login('https://audiobookbay.nl/member/login.php',"137573155@qq.com","491172625");
   if(sucess){
   	var maglink= await getMag("http://audiobookbay.nl/audio-books/the-road-to-serfdom/");
   	console.log(maglink);
   }
-  
+
 
   //getDetailUrls(items).map(item=>getMag(item));
   

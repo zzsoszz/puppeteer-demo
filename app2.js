@@ -8,25 +8,31 @@ const { map, filter,delay } = require('rxjs/operators');
 //https://github.com/GoogleChrome/puppeteer/blob/v1.13.0/docs/api.md
 
 (async () => {
-	
 
-  const browser = await puppeteer.launch({
-    executablePath: './chromium/chrome.exe',
-	headless: false,
-	devtools: true,
-	args: [
-		//"-–disable-gpu",
-		// "–disable-dev-shm-usage",
-		// "–disable-setuid-sandbox",
-		// "–no-first-run",
-		// "–no-sandbox",
-		// "–no-zygote",
-		// "–single-process"
-	]
+  //https://github.com/GoogleChrome/puppeteer/blob/v1.13.0/docs/api.md#environment-variables
+  //http://omahaproxy.appspot.com/
+  //637110
+  const browserFetcher = puppeteer.createBrowserFetcher();
+  const revisionInfo = await browserFetcher.download('637110');
+  const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath})
+  //https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/%d/%s.zip
+ //  const browser = await puppeteer.launch({
+ //    executablePath: './chromium/chrome.exe',
+	// headless: false,
+	// devtools: true,
 	// args: [
-    //  '--proxy-server=127.0.0.1:1080'
-    // ]
-  });
+	// 	//"-–disable-gpu",
+	// 	// "–disable-dev-shm-usage",
+	// 	// "–disable-setuid-sandbox",
+	// 	// "–no-first-run",
+	// 	// "–no-sandbox",
+	// 	// "–no-zygote",
+	// 	// "–single-process"
+	// ]
+	// // args: [
+ //    //  '--proxy-server=127.0.0.1:1080'
+ //    // ]
+ //  });
 
 
   async function login(url,username,password){

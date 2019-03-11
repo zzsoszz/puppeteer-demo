@@ -51,7 +51,7 @@ const puppeteer = require('puppeteer-core');
 
   async function getDetailUrls(){
   	  const page = await browser.newPage();
-	  page.setDefaultNavigationTimeout(30000);
+	  page.setDefaultNavigationTimeout(60000);
 	  await page.setCacheEnabled(false);
 	  console.log('111111',new Date());
 	  const timeout = 30000;

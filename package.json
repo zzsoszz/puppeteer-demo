@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "puppeteer": "^1.13.0",
-    "puppeteer-core": "^1.13.0"
+    "puppeteer-core": "^1.13.0",
+    "rxjs": "^6.4.0"
   }
 }

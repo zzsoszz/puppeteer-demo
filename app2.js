@@ -1,4 +1,8 @@
 const puppeteer = require('puppeteer-core');
+const { range } = require('rxjs');
+const { map, filter,delay } = require('rxjs/operators');
+		 
+
 
 //https://blog.lovemily.me/a-deep-dive-guide-for-crawling-spa-with-puppeteer-and-troubleshooting/#crawl-a-spa-page
 //https://github.com/GoogleChrome/puppeteer/blob/v1.13.0/docs/api.md
@@ -27,19 +31,20 @@ const puppeteer = require('puppeteer-core');
 
   async function login(url,username,password){
   	  const page = await browser.newPage();
-	  page.setDefaultNavigationTimeout(30000);
+	  page.setDefaultNavigationTimeout(60000);
 	  await page.setCacheEnabled(false);
 	  console.log('111111',new Date());
 	  const timeout = 30000;
 	  await page.goto('https://audiobookbay.nl/member/login.php',{
 	  	waitUntil:"domcontentloaded"
 	  });
+	  console.log('22222',new Date());
 	  var elementHandle = await page.$('#content > div > div.entry > table > tbody > tr > td.login-right > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input');
 	  await elementHandle.type(username);
 	  elementHandle = await page.$('#content > div > div.entry > table > tbody > tr > td.login-right > form > table > tbody > tr:nth-child(2) > td:nth-child(2) > input');
 	  await elementHandle.type(password);
 	  await elementHandle.press('Enter');
-	  console.log("22222",new Date());
+	  console.log("3333",new Date());
 	  await page.waitForNavigation();
 	  console.log("url",page.url());
 	  if(page.url()=="http://audiobookbay.nl/member/users/"){
@@ -48,21 +53,22 @@ const puppeteer = require('puppeteer-core');
 	  	   return false;
 	  }
   }
+    
 
-  async function getDetailUrls(){
+  async function getDetailUrls(url){
   	  const page = await browser.newPage();
 	  page.setDefaultNavigationTimeout(60000);
 	  await page.setCacheEnabled(false);
-	  console.log('111111',new Date());
-	  const timeout = 30000;
-	  await page.goto('http://audiobookbay.nl/page/9000/',{
+	  console.log('getDetailUrls.111111',new Date());
+	  await page.goto(url,{
 	  	waitUntil:"domcontentloaded"
 	  });
-	  console.log("ffffff",new Date());
+	  console.log('getDetailUrls.222222',new Date());
 	  var items=await page.evaluate(()=>(
 	       Array.from(document.querySelectorAll('#content > div > div > h2 > a'))
 	      	.map(item=>item.href)
 	  ));
+	  console.log("getDetailUrls",items);
 	  return items;
   }
 
@@ -71,42 +77,60 @@ const puppeteer = require('puppeteer-core');
   	  const page = await browser.newPage();
 	  page.setDefaultNavigationTimeout(30000);
 	  await page.setCacheEnabled(false);
-	  console.log('111111',new Date());
 	  const timeout = 30000;
 	  await page.goto(url,{
 	  	waitUntil:"domcontentloaded"
 	  });
-	  console.log('22222',new Date());
 	  await page.click("#magnetLink");
 	  await page.waitFor("#magnetIcon[style='display: inline;']");
-	  var items=await page.evaluate(()=>(
-	       Array.from(document.querySelectorAll('#magnetIcon'))
-	      	.map(item=>item.href)
-	  ));
-	  console.log("magnetIcon",items);
+	  const maglink = await page.$eval('#magnetIcon', el => el.href);
+	  console.log("getMag",);
+	  await page.close();
+	  return maglink;
+  }
 
-	  // var maglink=await page.$eval("#magnetIcon",function(item){
-	  // 		console.log(item.attr("href"));
-	  // });
-	  
-	  const searchValue = await page.$eval('#magnetIcon', el => el);
-	  console.log("searchValue",searchValue);
+  function getList(){
+	   return range(1, 2)
+	   .pipe(
+		  map(x => "http://audiobookbay.nl/page/" + x)
+	   );
+  }
+
+
+  async function run(){
+	  var sucess=await login('https://audiobookbay.nl/member/login.php',"137573155@qq.com","491172625");
+	  if(sucess){
+		  getList().subscribe(async x => {
+		      var magItems=await getDetailUrls(x).map(getMag);
+		      console.log("magItems",magItems);
+		  });
+	  }
+  }
+
+  await run();
+
+})();
+
+
+  	// var maglink= await getMag("http://audiobookbay.nl/audio-books/the-road-to-serfdom/");
+  	// console.log(maglink);
+
+  	  //https://github.com/Reactive-Extensions/RxJS/issues/697
+
+
+  // async function sleep(ms) {
+  // 	return new Promise(resolve => setTimeout(resolve, ms))
+  // }
+
+	  // var items=await page.evaluate(()=>(
+	  //      Array.from(document.querySelectorAll('#magnetIcon'))
+	  //     	.map(item=>item.href)
+	  // ));
+	  // console.log("magnetIcon",items);
 	  //console.log("maglink",maglink);
 	  // return maglink;
 	  //console.log("ffffff",new Date());
 	  //return items;
-
-	  return items;
-  }
-
-
-  var sucess=await login('https://audiobookbay.nl/member/login.php',"137573155@qq.com","491172625");
-  if(sucess){
-  	var maglink= await getMag("http://audiobookbay.nl/audio-books/the-road-to-serfdom/");
-  	console.log(maglink);
-  }
-
-
   //getDetailUrls(items).map(item=>getMag(item));
   
   //console.log("maglink",maglink);
@@ -117,10 +141,6 @@ const puppeteer = require('puppeteer-core');
   //console.log(items);
   //await page.close();
   //await browser.close();
-
-})();
-
-
 
 //return await page.content();
 // var items=await page.evaluate(()=>(

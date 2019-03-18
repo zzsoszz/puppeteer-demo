@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer-core');
+﻿const puppeteer = require('puppeteer-core');
 const { range } = require('rxjs');
 const { map, filter,delay } = require('rxjs/operators');
 		 
@@ -75,14 +75,14 @@ const { map, filter,delay } = require('rxjs/operators');
 	  page.setDefaultNavigationTimeout(60000);
 	  await page.setCacheEnabled(false);
 	  console.log('getDetailUrls.111111',new Date());
-	  await page.goto(url,{
-	  	waitUntil:"domcontentloaded"
-	  });
+	  await page.goto(url);
+	  await page.waitForNavigation();
 	  console.log('getDetailUrls.222222',new Date());
-	  var items=await page.evaluate(()=>(
-	       Array.from(document.querySelectorAll('#content > div > div > h2 > a'))
-	      	.map(item=>item.href)
-	  ));
+	  var items=await page.evaluate(()=>{
+	    	  var result= Array.from(document.querySelectorAll('#content > div > div > h2 > a')).map(item=>item.href+"");
+		  console.log("result:",result);
+		  return result;// "111";//result;
+	  });
 	  await page.close();
 	  console.log("getDetailUrls11111111111111111",items);
 	  return items;
@@ -106,7 +106,7 @@ const { map, filter,delay } = require('rxjs/operators');
   }
 
   function getList(){
-	   return range(1, 1)
+	   return range(100, 1)
 	   .pipe(
 		  map(x => "http://audiobookbay.nl/page/" + x)
 	   );
@@ -117,10 +117,17 @@ const { map, filter,delay } = require('rxjs/operators');
 	  var sucess=await login('https://audiobookbay.nl/member/login.php',"137573155@qq.com","491172625");
 	  if(sucess){
 		  getList().subscribe(async x => {
-		      getDetailUrls(x).then(urls=>{
+	
+			 try{
+			  getDetailUrls(x).then(urls=>{
 					var magItems=urls.map(getMag);
 					console.log("magItems",magItems);
 			  });
+
+			}catch(e){
+				console.log("error",e);
+		 	}
+
 		  });
 	  }
   }

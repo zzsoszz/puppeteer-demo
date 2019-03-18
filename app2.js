@@ -14,7 +14,12 @@ const { map, filter,delay } = require('rxjs/operators');
   //637110
   const browserFetcher = puppeteer.createBrowserFetcher();
   const revisionInfo = await browserFetcher.download('637110');
-  const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath})
+  const browser = await puppeteer.launch(
+  {
+	  executablePath: revisionInfo.executablePath,
+	  headless:false,
+	  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   //https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/%d/%s.zip
  //  const browser = await puppeteer.launch({
  //    executablePath: './chromium/chrome.exe',
@@ -52,16 +57,20 @@ const { map, filter,delay } = require('rxjs/operators');
 	  await elementHandle.press('Enter');
 	  console.log("3333",new Date());
 	  await page.waitForNavigation();
-	  console.log("url",page.url());
-	  if(page.url()=="http://audiobookbay.nl/member/users/"){
+	  var cururl=page.url();
+	  await page.close();
+	  console.log("login redirecturl",cururl);
+	  if(cururl=="http://audiobookbay.nl/member/users/"){
 	  	   return true;
 	  }else{
 	  	   return false;
 	  }
   }
-    
+  
+  
 
   async function getDetailUrls(url){
+	  console.log('getDetailUrls.url',url);
   	  const page = await browser.newPage();
 	  page.setDefaultNavigationTimeout(60000);
 	  await page.setCacheEnabled(false);
@@ -74,7 +83,8 @@ const { map, filter,delay } = require('rxjs/operators');
 	       Array.from(document.querySelectorAll('#content > div > div > h2 > a'))
 	      	.map(item=>item.href)
 	  ));
-	  console.log("getDetailUrls",items);
+	  await page.close();
+	  console.log("getDetailUrls11111111111111111",items);
 	  return items;
   }
 
@@ -96,7 +106,7 @@ const { map, filter,delay } = require('rxjs/operators');
   }
 
   function getList(){
-	   return range(1, 2)
+	   return range(1, 1)
 	   .pipe(
 		  map(x => "http://audiobookbay.nl/page/" + x)
 	   );
@@ -107,8 +117,10 @@ const { map, filter,delay } = require('rxjs/operators');
 	  var sucess=await login('https://audiobookbay.nl/member/login.php',"137573155@qq.com","491172625");
 	  if(sucess){
 		  getList().subscribe(async x => {
-		      var magItems=await getDetailUrls(x).map(getMag);
-		      console.log("magItems",magItems);
+		      getDetailUrls(x).then(urls=>{
+					var magItems=urls.map(getMag);
+					console.log("magItems",magItems);
+			  });
 		  });
 	  }
   }

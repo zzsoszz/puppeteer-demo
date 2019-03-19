@@ -9,8 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "lowdb": "^1.0.0",
     "puppeteer": "^1.13.0",
     "puppeteer-core": "^1.13.0",
+    "ramda": "^0.26.1",
     "rxjs": "^6.4.0"
   }
 }

@@ -1,5 +1,5 @@
 # puppeteer-demo
-
+ps -aux|grep chrome|grep -v grep | awk '{print $2}' | xargs kill -9
 
 //https://blog.lovemily.me/a-deep-dive-guide-for-crawling-spa-with-puppeteer-and-troubleshooting/#crawl-a-spa-page
 //https://github.com/GoogleChrome/puppeteer/blob/v1.13.0/docs/api.md

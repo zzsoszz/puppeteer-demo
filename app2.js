@@ -11,6 +11,7 @@ const db = low(adapter);
 const url = require('url');
 const path = require('path');
 const Fs = require('fs');
+var _ = require('lodash');
 const Axios  = require('axios');
 db.defaults({ posts: []}).write()
 
@@ -219,21 +220,25 @@ var posts=db.get('posts');
     }
 
     async function dealPage(page){
-        var urls=await getDetailUrls(page);
-        console.log("urls",urls);
-        var magItemsPromises = urls.map(url=>getMag(url,page));
-        var magItems=await Promise.all(magItemsPromises);
-        console.log("magItems",magItems);
-        var magItemsSavedStatusPromies=magItems.map(item=>writeLine(item));
-        var magItemsSavedStatus=await Promise.all(magItemsSavedStatusPromies);
-        console.log("magItemsSavedStatus",magItemsSavedStatus);
-        return magItemsSavedStatus;
+        var urlsAll=await getDetailUrls(page);
+		var urlsTrunck=_.chunk(urlsAll, 3);
+		for(const i=0;i<urlsTrunck.length;i++){
+			var urls=urlsTrunck[i];
+			var magItemsPromises = urls.map(url=>getMag(url,page));
+			var magItems=await Promise.all(magItemsPromises);
+			console.log("magItems",magItems);
+			var magItemsSavedStatusPromies=magItems.map(item=>writeLine(item));
+			var magItemsSavedStatus=await Promise.all(magItemsSavedStatusPromies);
+			console.log("magItemsSavedStatus",magItemsSavedStatus);
+		}
+        return;
     }
+	
 
     async function run() {
         var sucess = await login('https://audiobookbay.nl/member/login.php', "137573155@qq.com", "491172625");
         if (sucess) {
-            var pages=R.range(3000,4000)
+            var pages=R.range(5327,7000)
                 .map(x => "http://audiobookbay.nl/page/" + x);
             console.log("pages",pages);
             for(var i=0;i<pages.length;i++){

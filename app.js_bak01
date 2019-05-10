@@ -100,89 +100,23 @@ var posts=db.get('posts');
         }
     }
 
-	
-	
-	var objectPool = (function(){
-	  var _instance = null;
-	  function Pool(options) {
-	    this.objects=[];
-	    this.size=options.size;
-	    this.requireObject=function(){
-	      if(this.objects.length>0){
-	        return this.objects.shift();
-	      }
-	      return null;
-	    }
-	    this.returnObject=function(object){
-	      this.objects.push(object);
-	    }
-	    this.init=async function(){
-	    	for(var i=0;i<this.size;i++){
-				var obj=await options.createObject();
-				console.log("obj",obj);
-	    		this.objects.push(obj);
-	    	}
-	    }
-	  }
-	  return async function(options){
-	    if(!_instance) {
-	      _instance = new Pool(options);
-		   await _instance.init();
-		  console.log("inistance",_instance);
-		  return _instance;
-	    }
-	    return _instance;
-	  };
-	})();
-
-   //  var i=0;
-   // var page1= pagePool.requireObject();
-   // var page2= pagePool.requireObject();
-   // pagePool.returnObject(page1);
-   // pagePool.returnObject(page2);
-   // page1= pagePool.requireObject();
-   // page2= pagePool.requireObject();
-   // console.log(page1);
-   // console.log(page2);
-
-
     async function getDetailUrls(url) {
-    	var pagePool=await objectPool({
-				size:2,
-				createObject:async function(){
-					const page = await browser.newPage();
-					page.setDefaultNavigationTimeout(60000);
-					await page.setCacheEnabled(false);
-					console.log("page",page);
-					return page;
-					 // var p=(async ()=>{
-		                // const page = await browser.newPage();
-				        // page.setDefaultNavigationTimeout(60000);
-				        // await page.setCacheEnabled(false);
-				        // return page;
-				     // })();
-				     // console.log("page.........",p);
-				     //return p;
-				}
-		});
-		console.log("pagePool",pagePool);
-		var page= pagePool.requireObject();
-        try {
-			console.log('getDetailUrls.1', new Date());
-			await page.goto(url);
-			await page.waitForNavigation();
-			console.log('getDetailUrls.2', new Date());
-	        var items = await page.evaluate(() => {
-	            var result = Array.from(document.querySelectorAll('#content > div > div > h2 > a')).map(item => item.href + "");
-	            console.log("result:", result);
-	            return result;
-	        });
-	        pagePool.returnObject(page);
-			return items;
-    	} catch(e) {
-    		pagePool.returnObject(page);
-    		throw e;
-    	}
+        console.log('getDetailUrls.1', url);
+        const page = await browser.newPage();
+        page.setDefaultNavigationTimeout(60000);
+        await page.setCacheEnabled(false);
+        console.log('getDetailUrls.2', new Date());
+        await page.goto(url);
+        await page.waitForNavigation();
+        console.log('getDetailUrls.3', new Date());
+        var items = await page.evaluate(() => {
+            var result = Array.from(document.querySelectorAll('#content > div > div > h2 > a')).map(item => item.href + "");
+            console.log("result:", result);
+            return result;
+        });
+        await page.close();
+        console.log("getDetailUrls.4", items);
+        return items;
     }
 
     // async function getDetailUrls(url) {
@@ -236,12 +170,8 @@ var posts=db.get('posts');
                 var category = Array.from(document.querySelectorAll("#content > div.post > div.postInfo a[rel='category tag']")).map(item=>item.textContent);
                 var language = Array.from(document.querySelectorAll("#content > div.post > div.postInfo span[itemprop='inLanguage']")).map(item=>item.textContent);
                 var keywords = Array.from(document.querySelectorAll("#content > div.post > div.postInfo h2")).map(item=>item.textContent);
-				var coverUrlEle = document.querySelector("#content > div.post > div.postContent  img[itemprop='image']");
-		var coverUrl = coverUrlEle?coverUrlEle.src:"";
-				var descriptionEle1 = document.querySelector("#content > div.post > div.postContent");
-		if(descriptionEle1){descriptionEle1.querySelector(".sky").remove();};
-                var descriptionEle2 = document.querySelector("#content > div.post > div.postContent  .desc");
-				var descriptionEle =  descriptionEle2 ||  descriptionEle1;
+                var coverUrl = document.querySelector("#content > div.post > div.postContent  img[itemprop='image']").src;
+                var descriptionEle = document.querySelector("#content > div.post > div.postContent  .desc");
                 var description =descriptionEle?descriptionEle.outerHTML:"";
                 var authorEle=document.querySelector("#content > div.post > div.postContent .author");
                 var author=authorEle?authorEle.textContent:"";
@@ -295,8 +225,8 @@ var posts=db.get('posts');
 
     async function dealPage(page){
         var urlsAll=await getDetailUrls(page);
-		var urlsTrunck=_.chunk(urlsAll, 2);
-		for(var i=0;i<urlsTrunck.length;i++){
+		var urlsTrunck=_.chunk(urlsAll, 3);
+		for(const i=0;i<urlsTrunck.length;i++){
 			var urls=urlsTrunck[i];
 			var magItemsPromises = urls.map(url=>getMag(url,page));
 			var magItems=await Promise.all(magItemsPromises);
@@ -312,7 +242,7 @@ var posts=db.get('posts');
     async function run() {
         var sucess = await login('https://audiobookbay.nl/member/login.php', "137573155@qq.com", "491172625");
         if (sucess) {
-            var pages=R.range(5348,6000)
+            var pages=R.range(5000,6000)
                 .map(x => "http://audiobookbay.nl/page/" + x);
             console.log("pages",pages);
             for(var i=0;i<pages.length;i++){
